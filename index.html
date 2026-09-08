@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>文案随机抽取器</title>
+<style>
+:root{
+  --brand:#6366f1;
+  --brand-dark:#4f46e5;
+  --brand-light:#eef2ff;
+  --bg:#f8fafc;
+  --card:#ffffff;
+  --text:#1e293b;
+  --text-soft:#64748b;
+  --border:#e2e8f0;
+  --border-strong:#cbd5e1;
+  --ok:#10b981;
+  --shadow:0 4px 14px rgba(99,102,241,.18);
+  --shadow-hover:0 8px 24px rgba(99,102,241,.32);
+  --radius:14px;
+  --radius-sm:8px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Segoe UI",sans-serif;font-size:15px;line-height:1.6}
+.wrap{max-width:720px;margin:0 auto;padding:20px 16px 60px}
+header{padding:14px 4px 18px;text-align:center}
+header h1{margin:0;font-size:20px;font-weight:600;letter-spacing:.5px}
+header p{margin:4px 0 0;color:var(--text-soft);font-size:13px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:14px}
+.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap}
+.tab{padding:6px 12px;border:1px solid var(--border-strong);background:#fff;border-radius:999px;font-size:12px;cursor:pointer;color:var(--text-soft);transition:all .15s}
+.tab:hover{border-color:var(--brand);color:var(--brand)}
+.tab.active{background:var(--brand);border-color:var(--brand);color:#fff}
+.sep-input{width:auto;min-width:120px;padding:6px 10px;border:1px solid var(--border-strong);border-radius:6px;font-size:13px;font-family:inherit}
+.sep-input:disabled{background:#f1f5f9;color:#94a3b8}
+.switch{display:inline-flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;color:var(--text);user-select:none;padding:6px 10px;border:1px solid var(--border);border-radius:999px;background:#fff}
+.switch input{margin:0;accent-color:var(--brand);transform:translateY(-1px)}
+.switch.checked{background:var(--brand-light);border-color:var(--brand)}
+textarea{width:100%;min-height:170px;resize:vertical;border:1px solid var(--border-strong);border-radius:var(--radius-sm);padding:12px;font-family:inherit;font-size:14px;line-height:1.55;color:var(--text);background:#fff}
+textarea:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-light)}
+.btn{padding:8px 16px;border:1px solid var(--border-strong);background:#fff;border-radius:var(--radius-sm);font-size:13px;font-family:inherit;cursor:pointer;color:var(--text);transition:all .15s;display:inline-flex;align-items:center;gap:4px}
+.btn:hover{border-color:var(--brand);color:var(--brand)}
+.btn-ghost{background:transparent;border-color:var(--border)}
+.btn-ghost:hover{border-color:#ef4444;color:#ef4444}
+.btn-sm{font-size:12px;padding:5px 12px}
+.meta{color:var(--text-soft);font-size:13px;font-variant-numeric:tabular-nums}
+.pool-tag{display:inline-block;padding:3px 10px;background:var(--brand-light);color:var(--brand-dark);border-radius:999px;font-size:12px;font-weight:500}
+.btn-main{display:block;width:100%;padding:18px;border:none;border-radius:var(--radius);background:linear-gradient(135deg,var(--brand),var(--brand-dark));color:#fff;font-size:17px;font-weight:600;cursor:pointer;box-shadow:var(--shadow);transition:transform .15s,box-shadow .15s;letter-spacing:.5px;position:relative;overflow:hidden}
+.btn-main:hover:not(:disabled){transform:translateY(-2px);box-shadow:var(--shadow-hover)}
+.btn-main:active:not(:disabled){transform:translateY(0)}
+.btn-main:disabled{background:#cbd5e1;cursor:not-allowed;box-shadow:none}
+.btn-main .dice{font-size:20px;vertical-align:middle;margin-right:6px}
+.preview{margin-top:14px;padding:0;border:1px solid var(--border);border-radius:var(--radius);background:#fff;overflow:hidden;display:none}
+.preview.show{display:block;animation:slideIn .25s ease}
+@keyframes slideIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.preview-head{display:flex;justify-content:space-between;align-items:center;padding:8px 14px;background:var(--brand-light);font-size:12px;color:var(--brand-dark);font-weight:500}
+.preview-body{padding:14px;font-size:15px;line-height:1.6;white-space:pre-wrap;word-break:break-word;max-height:200px;overflow:auto}
+.preview-actions{padding:8px 14px 12px;display:flex;justify-content:flex-end;gap:8px;border-top:1px solid var(--border)}
+.preview-actions .btn{font-size:12px;padding:6px 12px}
+.counters{display:flex;justify-content:center;gap:24px;padding:8px 0 4px;color:var(--text-soft);font-size:13px;font-variant-numeric:tabular-nums}
+.counters b{color:var(--brand-dark);font-weight:600}
+.history-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px}
+.history-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:#fff;transition:border-color .15s}
+.history-item:hover{border-color:var(--brand)}
+.history-time{color:var(--text-soft);font-size:11px;flex-shrink:0;font-variant-numeric:tabular-nums;min-width:42px}
+.history-text{flex:1;min-width:0;font-size:13px;line-height:1.5;color:var(--text);overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.history-copy{flex-shrink:0;padding:4px 10px;font-size:11px;border:1px solid var(--border-strong);background:#fff;border-radius:999px;cursor:pointer;color:var(--text-soft);transition:all .15s}
+.history-copy:hover{border-color:var(--brand);color:var(--brand)}
+.empty{text-align:center;padding:24px 8px;color:var(--text-soft);font-size:13px}
+/* Toast */
+#toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(20px);background:rgba(15,23,42,.95);color:#fff;padding:10px 18px;border-radius:999px;font-size:13px;z-index:9999;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;max-width:90vw;text-align:center}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto}
+#toast.ok::before{content:"✓ ";color:var(--ok)}
+#toast.err::before{content:"⚠ ";color:#fbbf24}
+/* ripple */
+.ripple{position:absolute;border-radius:50%;background:rgba(255,255,255,.4);transform:scale(0);animation:rip .6s ease-out;pointer-events:none}
+@keyframes rip{to{transform:scale(4);opacity:0}}
+@media(max-width:480px){
+  .wrap{padding:14px 10px 40px}
+  header h1{font-size:18px}
+  .btn-main{padding:16px;font-size:16px}
+  .counters{gap:14px;font-size:12px}
+  .toolbar{gap:6px}
+  .switch{font-size:12px;padding:5px 8px}
+  .btn-sm{font-size:11px;padding:4px 10px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>文案随机抽取器</h1>
+    <p>粘贴文案 · 一键抽取 · 自动复制</p>
+  </header>
+
+  <!-- 顶部操作栏：开关 + 清空按钮 -->
+  <div class="toolbar">
+    <label class="switch checked" id="persistSwitch"><input type="checkbox" checked> 保存到本地</label>
+    <label class="switch checked" id="dedupeSwitch"><input type="checkbox" checked> 防止重复</label>
+    <div style="margin-left:auto;display:flex;gap:8px">
+      <button class="btn btn-ghost" id="clearInputBtn">清空输入</button>
+      <button class="btn btn-ghost" id="clearAllBtn">清空全部</button>
+    </div>
+  </div>
+
+  <!-- 文案输入卡片 -->
+  <div class="card">
+    <textarea id="poolInput" placeholder="在此处粘贴你的批量文案…&#10;&#10;自动识别分隔方式：&#10;· 序号格式：1. 文案↵标签：xxx↵2. 文案（序号+前后说明会自动剥离）&#10;· 空行分隔：每段之间有空行&#10;· 一行一条：每行一条&#10;· 符号分隔：用 | ; , 等符号（可切换「自定义符号」输入你想要的分隔符）"></textarea>
+    <div class="row" style="margin-top:12px;justify-content:space-between">
+      <span class="meta">当前池：<span class="pool-tag" id="poolCount">0 条</span></span>
+      <div class="tabs" id="sepTabs">
+        <span class="tab active" data-mode="auto">自动识别</span>
+        <span class="tab" data-mode="symbol">自定义符号</span>
+      </div>
+    </div>
+    <div id="symbolRow" style="display:none;margin-top:8px;text-align:right">
+      <input type="text" class="sep-input" id="symbolInput" placeholder="如 | ; , 等" maxlength="10">
+    </div>
+  </div>
+
+  <!-- 核心操作 -->
+  <button class="btn-main" id="pickBtn" disabled>
+    <span class="dice">👆</span>随机抽取一条
+  </button>
+
+  <!-- 抽中预览 -->
+  <div class="preview" id="preview">
+    <div class="preview-head">
+      <span>✦ 抽中文案</span>
+      <span id="copyStatus" style="color:var(--ok);font-weight:600">已复制 ✓</span>
+    </div>
+    <div class="preview-body" id="previewBody"></div>
+    <div class="preview-actions">
+      <button class="btn" id="recopyBtn">再复制</button>
+    </div>
+  </div>
+
+  <!-- 计数器 -->
+  <div class="counters" id="counters">
+    <span>累计抽取：<b id="totalCount">0</b> 次</span>
+    <span>本轮剩余：<b id="remainCount">0</b> 条</span>
+  </div>
+
+  <!-- 历史记录 -->
+  <div class="card">
+    <div class="row" style="margin-bottom:10px">
+      <strong style="font-size:14px">最近抽中</strong>
+      <button class="btn btn-ghost btn-sm" id="clearHistoryBtn" style="margin-left:auto">清空历史</button>
+    </div>
+    <ul class="history-list" id="historyList">
+      <li class="empty">暂无历史记录</li>
+    </ul>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+(function(){
+  'use strict';
+
+  // ===== 状态 =====
+  const LS = {
+    pool:'cp_pool_text',
+    settings:'cp_settings',
+    history:'cp_history',
+    count:'cp_count'
+  };
+  const state = {
+    pool:[],           // 解析后的文案数组
+    drawnIdx:new Set(),// 已抽取索引（防重复）
+    total:0,           // 累计抽取次数
+    history:[],        // 历史记录 [{text, time}]
+    lastPicked:'',     // 最近抽中文案
+    settings:{
+      sepMode:'auto',     // auto|symbol
+      symbol:'',
+      dedupe:true,
+      persist:true
+    }
+  };
+
+  // ===== DOM 引用 =====
+  const $ = id => document.getElementById(id);
+  const poolInput = $('poolInput');
+  const clearInputBtn = $('clearInputBtn');
+  const poolCount = $('poolCount');
+  const pickBtn = $('pickBtn');
+  const preview = $('preview');
+  const previewBody = $('previewBody');
+  const copyStatus = $('copyStatus');
+  const recopyBtn = $('recopyBtn');
+  const totalCount = $('totalCount');
+  const remainCount = $('remainCount');
+  const historyList = $('historyList');
+  const clearHistoryBtn = $('clearHistoryBtn');
+  const clearAllBtn = $('clearAllBtn');
+  const symbolRow = $('symbolRow');
+  const symbolInput = $('symbolInput');
+  const persistSwitch = $('persistSwitch');
+  const dedupeSwitch = $('dedupeSwitch');
+  const sepTabs = $('sepTabs');
+  const toastEl = $('toast');
+
+  // ===== 符号框宽度同步（与 tabs 等宽） =====
+  function syncSymbolInputWidth(){
+    if(sepTabs.offsetWidth > 0){
+      symbolInput.style.width = sepTabs.offsetWidth + 'px';
+    }
+  }
+  window.addEventListener('resize', syncSymbolInputWidth);
+
+  // ===== Toast =====
+  let toastTimer = null;
+  function toast(msg, type='ok'){
+    toastEl.textContent = msg;
+    toastEl.className = 'show ' + type;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(()=>{ toastEl.className = ''; },2200);
+  }
+
+  // ===== 持久化 =====
+  function save(){
+    if(!state.settings.persist) return;
+    try{
+      localStorage.setItem(LS.pool, poolInput.value);
+      localStorage.setItem(LS.settings, JSON.stringify(state.settings));
+      localStorage.setItem(LS.history, JSON.stringify(state.history));
+      localStorage.setItem(LS.count, String(state.total));
+    }catch(e){ console.warn('保存失败', e); }
+  }
+  function load(){
+    try{
+      const s = localStorage.getItem(LS.settings);
+      if(s) Object.assign(state.settings, JSON.parse(s));
+      const p = localStorage.getItem(LS.pool);
+      if(p) poolInput.value = p;
+      const h = localStorage.getItem(LS.history);
+      if(h) state.history = JSON.parse(h) || [];
+      const c = localStorage.getItem(LS.count);
+      if(c) state.total = parseInt(c,10) || 0;
+    }catch(e){ console.warn('加载失败', e); }
+  }
+  function clearAllStorage(){
+    Object.values(LS).forEach(k => localStorage.removeItem(k));
+  }
+
+  // ===== 文案解析 =====
+  function parsePool(){
+    const raw = poolInput.value;
+    if(!raw || !raw.trim()){
+      state.pool = [];
+      return;
+    }
+    const mode = state.settings.sepMode;
+    let arr = [];
+
+    if(mode === 'symbol'){
+      const sym = state.settings.symbol;
+      if(!sym){
+        // 空符号：按一行一条兜底，避免 new RegExp('') 匹配任意位置导致 split 出全空字符串
+        arr = raw.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+      } else {
+        const escaped = sym.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+        const re = new RegExp(escaped);
+        arr = raw.split(re).map(s=>s.trim()).filter(Boolean);
+      }
+    } else {
+      // auto 自动识别
+      arr = autoDetect(raw);
+    }
+
+    state.pool = arr;
+    state.drawnIdx.clear();  // 重新解析后重置抽取记录
+  }
+
+  // 序号前缀正则：要求序号 + 分隔符，避免误伤"12345真好看"这类纯数字开头的文案
+  // 支持：1. / 1、 / 1) / 1） / (1) / （1） / ①②③ / 一. / 二、
+  function parseSmart(raw){
+    const lines = raw.split(/\r?\n/);
+    const result = [];
+    let current = null;
+    let foundAnyNum = false;
+
+    const strictRe = /^\s*(\d{1,3}[.、)）]|[（(]\s*\d{1,3}\s*[)）]|[①-⑳]|[一二三四五六七八九十]{1,3}[.、)）])\s*/;
+
+    for(const line of lines){
+      const m = line.match(strictRe);
+      if(m){
+        foundAnyNum = true;
+        if(current !== null && current.trim()) result.push(current.trim());
+        current = line.slice(m[0].length);
+      }
+    }
+    if(current !== null && current.trim()) result.push(current.trim());
+
+    if(!foundAnyNum){
+      return raw.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+    }
+    return result;
+  }
+
+  function autoDetect(raw){
+    // 优先级0：检测到序号前缀格式 → 走智能去序号
+    const strictRe = /^\s*(\d{1,3}[.、)）]|[（(]\s*\d{1,3}\s*[)）]|[①-⑳]|[一二三四五六七八九十]{1,3}[.、)）])\s*/m;
+    const numLines = raw.split(/\r?\n/).filter(l => strictRe.test(l)).length;
+    if(numLines >= 2){
+      const smart = parseSmart(raw);
+      if(smart.length > 1) return smart;
+    }
+
+    // 优先级1：空行分隔
+    const byBlank = raw.split(/\n\s*\n/).map(s=>s.trim()).filter(Boolean);
+    if(byBlank.length > 1) return byBlank;
+
+    // 优先级2：符号分隔（检测 | ; ； ｜ 等常见符号）
+    const symMatch = raw.match(/[|;；｜]/);
+    if(symMatch){
+      const sym = symMatch[0];
+      const escaped = sym.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+      const re = new RegExp(escaped,'g');
+      const bySym = raw.split(re).map(s=>s.trim()).filter(Boolean);
+      if(bySym.length > 1) return bySym;
+    }
+
+    // 优先级3：一行一条（兜底）
+    return raw.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+  }
+
+  // ===== 抽取算法 =====
+  function pickOne(){
+    if(state.pool.length === 0) return null;
+    if(!state.settings.dedupe){
+      const idx = Math.floor(Math.random() * state.pool.length);
+      return state.pool[idx];
+    }
+    // 防重复：已抽满则弹 confirm 询问是否开始新一轮
+    if(state.drawnIdx.size >= state.pool.length){
+      const ok = confirm(`已抽完全部 ${state.pool.length} 条，是否开始新一轮？`);
+      if(!ok) return null;             // 用户取消，不抽取，drawnIdx 保持满
+      state.drawnIdx.clear();          // 确认后清空，开始新一轮
+    }
+    let idx;
+    let safety = 0;
+    do {
+      idx = Math.floor(Math.random() * state.pool.length);
+      safety++;
+      if(safety > 1000){ break; }
+    } while(state.drawnIdx.has(idx));
+    state.drawnIdx.add(idx);
+    return state.pool[idx];
+  }
+
+  // ===== 复制到剪贴板 =====
+  async function copyText(text){
+    if(!text) return false;
+    try{
+      if(navigator.clipboard && window.isSecureContext){
+        await navigator.clipboard.writeText(text);
+        return true;
+      }
+    }catch(e){ /* 走降级 */ }
+    try{
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.top = '-1000px';
+      ta.style.left = '-1000px';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      ta.setSelectionRange(0, text.length);
+      const ok = document.execCommand('copy');
+      document.body.removeChild(ta);
+      return ok;
+    }catch(e){
+      return false;
+    }
+  }
+
+  // ===== UI 更新 =====
+  function updatePoolCount(){
+    poolCount.textContent = state.pool.length + ' 条';
+    pickBtn.disabled = state.pool.length === 0;
+    updateCounters();
+  }
+  function updateCounters(){
+    totalCount.textContent = state.total;
+    if(state.settings.dedupe){
+      const remain = Math.max(0, state.pool.length - state.drawnIdx.size);
+      remainCount.textContent = remain;
+    } else {
+      remainCount.textContent = '∞';
+    }
+  }
+  function renderHistory(){
+    if(state.history.length === 0){
+      historyList.innerHTML = '<li class="empty">暂无历史记录</li>';
+      return;
+    }
+    historyList.innerHTML = state.history.map((h,i)=>`
+      <li class="history-item">
+        <span class="history-time">${h.time}</span>
+        <span class="history-text" title="${escapeHtml(h.text)}">${escapeHtml(h.text)}</span>
+        <button class="history-copy" data-idx="${i}">再复制</button>
+      </li>
+    `).join('');
+  }
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+  function formatTime(d){
+    const pad = n => String(n).padStart(2,'0');
+    return pad(d.getHours())+':'+pad(d.getMinutes());
+  }
+
+  // ===== 抽取主流程 =====
+  async function doPick(){
+    if(state.pool.length === 0){
+      toast('请先粘贴文案', 'err');
+      return;
+    }
+    const text = pickOne();
+    if(!text){
+      // pickOne 返回 null 只在用户取消"开始新一轮"时发生
+      toast('已取消抽取', 'ok');
+      return;
+    }
+    state.lastPicked = text;
+    state.total++;
+
+    const ok = await copyText(text);
+
+    previewBody.textContent = text;
+    preview.classList.add('show');
+    if(ok){
+      copyStatus.textContent = '已复制 ✓';
+      copyStatus.style.color = 'var(--ok)';
+    } else {
+      copyStatus.textContent = '复制失败，请手动复制';
+      copyStatus.style.color = '#ef4444';
+    }
+
+    state.history.unshift({ text:text, time:formatTime(new Date()) });
+    if(state.history.length > 10) state.history.length = 10;
+    renderHistory();
+
+    updateCounters();
+
+    if(ok){
+      toast('已复制到剪贴板', 'ok');
+    } else {
+      toast('剪贴板被拒，请手动复制', 'err');
+    }
+
+    save();
+  }
+
+  // ===== 按钮波纹 =====
+  function ripple(e){
+    const btn = e.currentTarget;
+    const rect = btn.getBoundingClientRect();
+    const size = Math.max(rect.width, rect.height);
+    const x = (e.clientX || rect.left+rect.width/2) - rect.left - size/2;
+    const y = (e.clientY || rect.top+rect.height/2) - rect.top - size/2;
+    const r = document.createElement('span');
+    r.className = 'ripple';
+    r.style.width = r.style.height = size + 'px';
+    r.style.left = x + 'px';
+    r.style.top = y + 'px';
+    btn.appendChild(r);
+    setTimeout(()=> r.remove(), 600);
+  }
+
+  // ===== 事件绑定 =====
+  // 输入框防抖自动解析（粘贴即解析，无需点按钮）
+  let parseTimer = null;
+  poolInput.addEventListener('input', ()=>{
+    clearTimeout(parseTimer);
+    parseTimer = setTimeout(()=>{
+      parsePool();
+      updatePoolCount();
+      save();
+    }, 600);
+  });
+
+  clearInputBtn.addEventListener('click', ()=>{
+    if(poolInput.value && !confirm('确定清空输入框内容？')) return;
+    poolInput.value = '';
+    state.pool = [];
+    state.drawnIdx.clear();
+    updatePoolCount();
+    clearTimeout(parseTimer);
+    save();
+    toast('输入框已清空', 'ok');
+  });
+
+  pickBtn.addEventListener('click', e=>{
+    ripple(e);
+    doPick();
+  });
+
+  recopyBtn.addEventListener('click', async ()=>{
+    if(!state.lastPicked) return;
+    const ok = await copyText(state.lastPicked);
+    if(ok) toast('已再次复制', 'ok'); else toast('复制失败', 'err');
+  });
+
+  clearHistoryBtn.addEventListener('click', ()=>{
+    state.history = [];
+    renderHistory();
+    save();
+    toast('历史已清空', 'ok');
+  });
+
+  clearAllBtn.addEventListener('click', ()=>{
+    if(!confirm('确定清空全部数据？包括文案池、历史记录、计数器等。\n（本地存储也会一并清除）')) return;
+    clearAllStorage();
+    poolInput.value = '';
+    state.pool = [];
+    state.drawnIdx.clear();
+    state.history = [];
+    state.total = 0;
+    state.lastPicked = '';
+    preview.classList.remove('show');
+    // 清空符号输入框（保留 sepMode/防重复/保存开关等其他偏好）
+    symbolInput.value = '';
+    state.settings.symbol = '';
+    updatePoolCount();
+    renderHistory();
+    clearTimeout(parseTimer);
+    toast('全部数据已清空', 'ok');
+  });
+
+  // 分隔方式 tab
+  sepTabs.addEventListener('click', e=>{
+    const t = e.target.closest('.tab');
+    if(!t) return;
+    sepTabs.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    state.settings.sepMode = t.dataset.mode;
+    symbolRow.style.display = (state.settings.sepMode === 'symbol') ? 'block' : 'none';
+    if(state.settings.sepMode === 'symbol'){
+      // 等 symbolRow 显示后下一帧再量宽度，确保 offsetWidth 准确
+      requestAnimationFrame(syncSymbolInputWidth);
+    }
+    parsePool();
+    updatePoolCount();
+    save();
+  });
+
+  symbolInput.addEventListener('input', e=>{
+    state.settings.symbol = e.target.value;
+    parsePool();
+    updatePoolCount();
+    save();
+  });
+
+  // 开关
+  persistSwitch.addEventListener('click', e=>{
+    if(e.target.tagName === 'INPUT'){
+      state.settings.persist = e.target.checked;
+      persistSwitch.classList.toggle('checked', state.settings.persist);
+      if(!state.settings.persist){
+        clearAllStorage();
+        toast('已关闭本地保存，刷新后内容会清空', 'ok');
+      } else {
+        save();
+        toast('已开启本地保存', 'ok');
+      }
+    }
+  });
+
+  dedupeSwitch.addEventListener('click', e=>{
+    if(e.target.tagName === 'INPUT'){
+      state.settings.dedupe = e.target.checked;
+      dedupeSwitch.classList.toggle('checked', state.settings.dedupe);
+      state.drawnIdx.clear();
+      updateCounters();
+      save();
+      toast(state.settings.dedupe ? '已开启防重复' : '已关闭防重复，纯随机', 'ok');
+    }
+  });
+
+  // 历史列表的"再复制"按钮（事件代理）
+  historyList.addEventListener('click', async e=>{
+    const btn = e.target.closest('.history-copy');
+    if(!btn) return;
+    const idx = parseInt(btn.dataset.idx,10);
+    if(isNaN(idx) || !state.history[idx]) return;
+    const text = state.history[idx].text;
+    const ok = await copyText(text);
+    if(ok){
+      toast('已复制', 'ok');
+      btn.textContent = '✓ 已复制';
+      setTimeout(()=>{ btn.textContent = '再复制'; }, 1200);
+    } else {
+      toast('复制失败', 'err');
+    }
+  });
+
+  // 快捷键：空格或回车抽取（前提：焦点不在输入框）
+  document.addEventListener('keydown', e=>{
+    if(e.target === poolInput || e.target === symbolInput) return;
+    if(e.code === 'Space' || e.code === 'Enter'){
+      if(!pickBtn.disabled){
+        e.preventDefault();
+        doPick();
+      }
+    }
+  });
+
+  // ===== 初始化 =====
+  function init(){
+    load();
+    // 旧存储兼容：sepMode 不在 auto|symbol 内则重置为 auto
+    if(state.settings.sepMode !== 'auto' && state.settings.sepMode !== 'symbol'){
+      state.settings.sepMode = 'auto';
+    }
+    // 恢复 UI 状态
+    sepTabs.querySelectorAll('.tab').forEach(x=>{
+      x.classList.toggle('active', x.dataset.mode === state.settings.sepMode);
+    });
+    symbolInput.value = state.settings.symbol || '';
+    symbolRow.style.display = (state.settings.sepMode === 'symbol') ? 'block' : 'none';
+    if(state.settings.sepMode === 'symbol'){
+      requestAnimationFrame(syncSymbolInputWidth);
+    }
+    persistSwitch.querySelector('input').checked = state.settings.persist;
+    persistSwitch.classList.toggle('checked', state.settings.persist);
+    dedupeSwitch.querySelector('input').checked = state.settings.dedupe;
+    dedupeSwitch.classList.toggle('checked', state.settings.dedupe);
+
+    parsePool();
+    updatePoolCount();
+    renderHistory();
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
