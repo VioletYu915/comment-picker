@@ -109,7 +109,7 @@ textarea:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px var(-
 
   <!-- 文案输入卡片 -->
   <div class="card">
-    <textarea id="poolInput" placeholder="在此处粘贴你生成的批量文案…&#10;&#10;自动识别分隔方式：&#10;· 序号格式：1. 文案↵标签：xxx↵2. 文案（序号+前后说明会自动剥离）&#10;· 空行分隔：每段之间有空行&#10;· 一行一条：每行一条&#10;· 符号分隔：用 | ; , 等符号（可切换「自定义符号」输入你需要的分隔符）"></textarea>
+    <textarea id="poolInput" placeholder="在此处粘贴你生成的批量文案……&#10;&#10;自动识别分隔方式：&#10;· 序号格式：1. 文案↵标签：xxx↵2. 文案（序号+前后说明会自动剥离）&#10;· 空行分隔：每段之间有空行&#10;· 一行一条：每行一条&#10;· 符号分隔：用 | ; , 等符号（可切换「自定义符号」输入你需要的分隔符）"></textarea>
     <div class="row" style="margin-top:12px;justify-content:space-between">
       <span class="meta">当前池：<span class="pool-tag" id="poolCount">0 条</span></span>
       <div class="tabs" id="sepTabs">
@@ -579,7 +579,7 @@ textarea:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px var(-
         localStorage.removeItem(LS.count);
         // 直接 inline 写一次 settings（绕过 save() 的 persist 拦截）
         localStorage.setItem(LS.settings, JSON.stringify(state.settings));
-        toast('已关闭本地保存，刷新后内容会清空，开关状态保留', 'ok');
+        toast('已关闭本地保存，刷新后内容会清空', 'ok');
       } else {
         save();
         toast('已开启本地保存', 'ok');
