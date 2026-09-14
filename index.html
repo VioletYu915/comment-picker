@@ -109,12 +109,12 @@ textarea:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px var(-
 
   <!-- 文案输入卡片 -->
   <div class="card">
-    <textarea id="poolInput" placeholder="在此处粘贴你生成的批量文案……&#10;&#10;自动识别分隔方式：&#10;· 序号格式：1. 文案↵标签：xxx↵2. 文案（序号+前后说明会自动剥离）&#10;· 空行分隔：每段之间有空行&#10;· 一行一条：每行一条&#10;· 符号分隔：用 | ; , 等符号（可切换「自定义符号」输入你需要的分隔符）"></textarea>
+    <textarea id="poolInput" placeholder="在此处粘贴你生成的批量文案……&#10;&#10;自动识别分隔方式：&#10;· 序号格式：1. 文案↵标签：xxx↵2. 文案（序号+标签/说明会自动剥离）&#10;· 空行分隔：每段之间有空行&#10;· 一行一条：每行一条&#10;· 符号分隔：用 | ; , 等符号（可切换「自定义符号」输入你需要的分隔符）"></textarea>
     <div class="row" style="margin-top:12px;justify-content:space-between">
       <span class="meta">当前池：<span class="pool-tag" id="poolCount">0 条</span></span>
       <div class="tabs" id="sepTabs">
-        <span class="tab active" data-mode="auto">自动识别</span>
-        <span class="tab" data-mode="hashtag">按hashtag分隔</span>
+        <span class="tab active" data-mode="hashtag">按hashtag分隔</span>
+        <span class="tab" data-mode="auto">自动识别</span>
         <span class="tab" data-mode="symbol">自定义符号</span>
       </div>
     </div>
@@ -178,7 +178,7 @@ textarea:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px var(-
     history:[],        // 历史记录 [{text, time}]
     lastPicked:'',     // 最近抽中文案
     settings:{
-      sepMode:'auto',     // auto|symbol
+      sepMode:'hashtag',  // hashtag|auto|symbol
       symbol:'',
       dedupe:true,
       persist:true
