@@ -114,6 +114,7 @@ textarea:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px var(-
       <span class="meta">当前池：<span class="pool-tag" id="poolCount">0 条</span></span>
       <div class="tabs" id="sepTabs">
         <span class="tab active" data-mode="auto">自动识别</span>
+        <span class="tab" data-mode="hashtag">按hashtag合并</span>
         <span class="tab" data-mode="symbol">自定义符号</span>
       </div>
     </div>
@@ -269,6 +270,9 @@ textarea:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px var(-
         const re = new RegExp(escaped);
         arr = raw.split(re).map(s=>s.trim()).filter(Boolean);
       }
+    } else if(mode === 'hashtag'){
+      // 按 hashtag 合并：评论段 + 紧跟的 hashtag 块合并为一条
+      arr = parseByHashtag(raw);
     } else {
       // auto 自动识别
       arr = autoDetect(raw);
@@ -276,6 +280,37 @@ textarea:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px var(-
 
     state.pool = arr;
     state.drawnIdx.clear();  // 重新解析后重置抽取记录
+  }
+
+  // 按 hashtag 合并解析：每条文案 = 评论段 + 紧跟的 hashtag 块
+  // 判断 hashtag 块：段里至少一行以 # 开头
+  function parseByHashtag(raw){
+    const segments = raw.split(/\n\s*\n/).map(s=>s.trim()).filter(Boolean);
+    if(segments.length === 0) return [];
+
+    const isHashtagBlock = s => s.split(/\r?\n/).some(line => line.trim().startsWith('#'));
+
+    const result = [];
+    let i = 0;
+    while(i < segments.length){
+      const seg = segments[i];
+      if(isHashtagBlock(seg)){
+        // hashtag 段在前没有评论，单独算一条
+        result.push(seg);
+        i++;
+      } else {
+        // 评论段：看后面是否紧跟 hashtag 段，是就合并
+        if(i + 1 < segments.length && isHashtagBlock(segments[i + 1])){
+          result.push(seg + '\n\n' + segments[i + 1]);
+          i += 2;
+        } else {
+          // 后面不是 hashtag 段，评论单独算一条
+          result.push(seg);
+          i++;
+        }
+      }
+    }
+    return result;
   }
 
   // 序号前缀正则：要求序号 + 分隔符，避免误伤"12345真好看"这类纯数字开头的文案
@@ -630,7 +665,7 @@ textarea:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px var(-
   function init(){
     load();
     // 旧存储兼容：sepMode 不在 auto|symbol 内则重置为 auto
-    if(state.settings.sepMode !== 'auto' && state.settings.sepMode !== 'symbol'){
+    if(state.settings.sepMode !== 'auto' && state.settings.sepMode !== 'symbol' && state.settings.sepMode !== 'hashtag'){
       state.settings.sepMode = 'auto';
     }
     // 恢复 UI 状态
